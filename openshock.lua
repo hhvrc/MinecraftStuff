@@ -171,7 +171,8 @@ while true do
 
         local token = getPlayerAuthToken(playerId)
         if not token then
-            chat.sendMessage("No token saved! Use: !settoken <token>")
+            chat.sendMessage(playerName .. ", you haven't set your OpenShock token yet!")
+            chat.sendMessage("Paste your token using: !settoken <your_token_here>")
             goto continue
         end
 
