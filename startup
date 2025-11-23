@@ -1,1 +1,2 @@
 shell.run("openshock.lua")
+shell.run("presence.lua")
