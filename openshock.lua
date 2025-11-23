@@ -1,10 +1,5 @@
 local chat = peripheral.wrap("back")
-local monitor = peripheral.wrap("left")
 local speaker = peripheral.wrap("top")
-
-monitor.clear()
-monitor.setCursorPos(0,0)
-monitor.write("Chaos is STINKY!")
 
 -------------------------------------------------
 -- Player config (players.json)
