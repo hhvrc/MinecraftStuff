@@ -16,8 +16,8 @@ local dfpwm = require("cc.audio.dfpwm")
 -- Presence sound config
 -------------------------------------------------
 local PRESENCE_SOUND_PATH = "/presence_sound.dfpwm"
-local PRESENCE_COOLDOWN_MS = 10_000  -- 10 seconds between plays
-local DETECTION_RANGE = 5            -- blocks radius
+local PRESENCE_COOLDOWN_MS = 10000  -- 10 seconds between plays
+local DETECTION_RANGE = 5           -- blocks radius
 
 -------------------------------------------------
 -- Download presence sound
