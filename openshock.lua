@@ -1,4 +1,10 @@
 local chat = peripheral.wrap("back")
+local monitor = peripheral.wrap("left")
+local speaker = peripheral.wrap("top")
+
+monitor.clear()
+monitor.setCursorPos(0,0)
+monitor.write("Chaos is STINKY!")
 
 -------------------------------------------------
 -- Player config (players.json)
@@ -67,6 +73,66 @@ end
 
 -- Load player config on startup
 loadPlayers()
+
+-------------------------------------------------
+-- Shock sound config (global)
+-------------------------------------------------
+local SHOCK_SOUND_PATH = "/shock_sound.dfpwm"
+local dfpwm = require("cc.audio.dfpwm")
+
+local function downloadShockSound(url)
+    local h, err = http.get(url, nil, true) -- binary
+    if not h then
+        return false, "HTTP GET failed: " .. tostring(err)
+    end
+
+    local f = fs.open(SHOCK_SOUND_PATH, "wb")
+    if not f then
+        h.close()
+        return false, "Failed to open sound file for writing"
+    end
+
+    while true do
+        local chunk = h.read(16 * 1024)
+        if not chunk then break end
+        f.write(chunk)
+    end
+
+    f.close()
+    h.close()
+    return true
+end
+
+local function playShockSound()
+    if not fs.exists(SHOCK_SOUND_PATH) then
+        -- No sound configured, silently ignore
+        return
+    end
+
+    local file = fs.open(SHOCK_SOUND_PATH, "rb")
+    if not file then
+        print("Failed to open shock sound file")
+        return
+    end
+
+    local decoder = dfpwm.make_decoder()
+
+    while true do
+        local chunk = file.read(16 * 1024)
+        if not chunk then break end
+
+        local buffer = decoder(chunk)
+        speaker.playAudio(buffer)
+
+        -- assume 48000 Hz mono, 1 byte/sample
+        local seconds = #buffer / 48000
+        if seconds > 0 then
+            sleep(seconds)
+        end
+    end
+
+    file.close()
+end
 
 -------------------------------------------------
 -- OpenShock logic
@@ -165,6 +231,28 @@ while true do
             end
         end
 
+    -- Set global shock sound (DFPWM only)
+    elseif msg:sub(1, 9) == "!setsound" then
+        local url = raw:match("^!setsound%s+(.+)$")
+        if not url or url == "" then
+            chat.sendMessage("Usage: !setsound <url-to-.dfpwm>")
+        else
+            local lower = url:lower()
+            if not lower:match("%.dfpwm") then
+                chat.sendMessage("Shock sound must be in .dfpwm format.")
+                chat.sendMessage("Go to https://music.madefor.cc/ to convert your audio,")
+                chat.sendMessage("upload the .dfpwm (e.g. to Discord) and paste the direct link here.")
+            else
+                chat.sendMessage("Downloading new shock sound...")
+                local ok, err = downloadShockSound(url)
+                if ok then
+                    chat.sendMessage("Shock sound updated successfully!")
+                else
+                    chat.sendMessage("Failed to download shock sound: " .. tostring(err))
+                end
+            end
+        end
+
     -- Amogus trigger
     elseif msg:find("amogus") then
         chat.sendMessage(playerName .. " said amogus...")
@@ -191,6 +279,10 @@ while true do
 
         -- Vibrate the cached shockers
         vibrateShockers(token, ids)
+
+        -- Play global shock sound if configured
+        playShockSound()
+
         chat.sendMessage("shocked!")
     end
 
